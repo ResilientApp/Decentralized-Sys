@@ -8,7 +8,7 @@ function App() {
     { name: "Presentation.pptx", type: "file", date: "2024-11-12", location: "In My Drive" },
     { name: "Photos", type: "folder", date: "2024-11-14", location: "In My Drive" },
     { name: "Video.mp4", type: "file", date: "2024-11-11", location: "In My Drive" },
-    { name: "Notes.txt", type: "file", date: "2024-11-10", location: "In My Drive" },
+    { name: "ECS 189F notes.txt", type: "file", date: "2024-11-10", location: "In My Drive" },
     { name: "Music.mp3", type: "file", date: "2024-11-09", location: "In My Drive" },
   ]);
   const [searchQuery, setSearchQuery] = useState("");
