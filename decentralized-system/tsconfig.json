@@ -1,13 +1,16 @@
 {
-    "compilerOptions": {
-      "target": "es6",
-      "module": "commonjs",
-      "jsx": "react",
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "jsx": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "outDir": "./dist", // Specify output directory for compiled files
+    "rootDir": "./src"  // Specify the root directory of your source files
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"] // Exclude output directory
 }
-  

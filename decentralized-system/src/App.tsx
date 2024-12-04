@@ -1,4 +1,5 @@
-import React, { useState, ChangeEvent } from 'react';
+import axios from 'axios';
+import React, { ChangeEvent, useState } from 'react';
 import './App.css';
 
 interface Item {
@@ -24,14 +25,36 @@ const App: React.FC = () => {
 
   //Upload handle
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
-    if (uploadedFile) {
-      const today = new Date().toISOString().split("T")[0];
-      setItems((prevItems) => [
-        ...prevItems,
-        { name: uploadedFile.name, type: "file", date: today, location: "In My Drive" },
-      ]);
+  
+    if (!uploadedFile) return;
+  
+    const formData = new FormData();
+    formData.append('file', uploadedFile);
+    formData.append('owner_name', 'Test Owner');  // Dummy
+    formData.append('owner_public_key', 'public_key_xyz');
+    formData.append('owner_private_key', 'private_key_xyz');
+  
+    try {
+      const response = await axios.post(
+        'https://resilientfilesbackend.onrender.com/upload_and_store/',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      alert(`File uploaded successfully: ${JSON.stringify(response.data)}`);
+
+    } catch (error: any) {
+      if (error.response) {
+        alert(`Error: ${JSON.stringify(error.response.data)}`);
+      } else {
+        alert(`Error: ${error.message}`);
+      }
     }
   };
 
