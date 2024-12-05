@@ -127,13 +127,13 @@
   background: #f9f9f9;
 }
 
-/*=============== UPLOAD BUTTON ================*/
+/*=============== UPLOAD/RETRIEVE BUTTONS ================*/
 
 
 .upload-button-container {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  right: 25px;
   z-index: 2;
 }
 
@@ -144,7 +144,7 @@
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.5rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
@@ -154,6 +154,42 @@
 .upload-button:hover {
   background-color: #357ae8;
 }
+
+
+
+
+.retrieve-button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 235px;
+  z-index: 2;
+}
+
+.retrieve-button {
+  background-color: #f46042;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.retrieve-button:hover {
+  background-color: #f44b42;
+}
+
+#transaction-id-input{
+  font-size: 0.65rem;
+  width: 95%;
+  margin: auto;
+  text-align:center;
+}
+
 
 
 

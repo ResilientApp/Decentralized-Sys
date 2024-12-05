@@ -16,6 +16,7 @@ interface Item {
   location: string;
 }
 
+
 const App: React.FC = () => {
   const [items, setItems] = useState<Item[]>([
     { name: "Colab Notebooks", type: "folder", date: "2024-11-15", location: "In My Drive" },
@@ -40,27 +41,36 @@ const App: React.FC = () => {
     const formData = new FormData();
     formData.append('file', uploadedFile);
     formData.append('owner_name', 'Test Owner');  // Dummy
-    formData.append('owner_public_key', 'public_key_xyz');
-    formData.append('owner_private_key', 'private_key_xyz');
+    formData.append('owner_public_key', publicKey);
+    formData.append('owner_private_key', privateKey);
   
     try {
       console.log('Uploading file:', uploadedFile.name, uploadedFile.type);
 
       const response = await axios.post(
-        'https://resilientfilesbackend.onrender.com/upload_and_store/',
+        'https://resilientfilesapi.onrender.com/upload_and_store/',
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          },
+          }
         }
       );
 
+
       alert(`File uploaded successfully: ${JSON.stringify(response.data)}`);
+
+      const currentDate = new Date();
+
+
+
+      const newElement:Item = { name: uploadedFile.name, type: 'file', date: currentDate.toDateString(), location: "In My Drive" }
+
+      setItems([...items, newElement]);
+
 
     } catch (error: any) {
       console.error('Error uploading file:', error);
-  
       if (error.response) {
         alert(`Error: ${JSON.stringify(error.response.data)}`);
       } else {
@@ -68,6 +78,46 @@ const App: React.FC = () => {
       }
     }
   };
+
+  const handleFileRetrieval = async (inp: string) => {
+    const givenTransactionID = inp;
+  
+    if (!givenTransactionID) return;
+  
+  
+    try {
+      console.log('Attempting to retrieve file with Transaction ID:', givenTransactionID);
+
+      const response = await axios.post(
+        `https://resilientfilesapi.onrender.com/retrieve_file/?tx_id=${givenTransactionID}`
+      );
+
+
+      alert(`File retrieved successfully: ${JSON.stringify(response.data)}`);
+
+      console.log(`File retrieved successfully: ${JSON.stringify(response.data)}`);
+      
+      const currentDate = new Date();
+
+
+      const nameExample = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
+
+      //console.log(response.data.media_type)
+
+      const newElement:Item = { name: nameExample, type: 'file', date: currentDate.toDateString(), location: "In My Drive" }
+
+      setItems([...items, newElement]);
+
+    } catch (error: any) {
+      console.error('Error retrieving file:', error);
+      if (error.response) {
+        alert(`Error: ${JSON.stringify(error.response.data)}`);
+      } else {
+        alert(`Error: ${error.message}`);
+      }
+    }
+  };
+
 
   // Sorting
 
@@ -105,7 +155,11 @@ const App: React.FC = () => {
 
   const filteredItems = filterAndSortItems();
 
+  const [showInput, setShowInput] = useState(false);
+  const [text, setText] = useState('');
+  
   return (
+    
     <div className="App">
       <header className="app-header">
         <h1>My Drive</h1>
@@ -188,6 +242,23 @@ const App: React.FC = () => {
             <label htmlFor="file-upload" className="upload-button">
               + Upload File
             </label>
+          </div>
+          <div className="retrieve-button-container">
+            {showInput && (
+              <input 
+                type="text"
+                id="transaction-id-input"
+                onChange={(e) =>  setText(e.target.value)} 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleFileRetrieval(text);
+                    setShowInput(false);
+                  }
+                }}
+                placeholder="Transaction ID Here (Enter to Submit)" 
+              />
+            )}
+            <button className="retrieve-button" onClick={() => setShowInput(!showInput)}>+ Retrieve File</button>
           </div>
         </div>
       </div>
