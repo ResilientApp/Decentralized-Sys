@@ -1,6 +1,13 @@
 import axios from 'axios';
 import React, { ChangeEvent, useState } from 'react';
 import './App.css';
+import { ResilientDB } from 'resilientdb-javascript-sdk';
+
+// Generate public and private keys
+const { publicKey, privateKey } = ResilientDB.generateKeys();
+
+console.log(`Public Key: ${publicKey}`);
+console.log(`Private Key: ${privateKey}`);
 
 interface Item {
   name: string;
