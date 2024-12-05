@@ -37,6 +37,8 @@ const App: React.FC = () => {
     formData.append('owner_private_key', 'private_key_xyz');
   
     try {
+      console.log('Uploading file:', uploadedFile.name, uploadedFile.type);
+
       const response = await axios.post(
         'https://resilientfilesbackend.onrender.com/upload_and_store/',
         formData,
@@ -50,6 +52,8 @@ const App: React.FC = () => {
       alert(`File uploaded successfully: ${JSON.stringify(response.data)}`);
 
     } catch (error: any) {
+      console.error('Error uploading file:', error);
+  
       if (error.response) {
         alert(`Error: ${JSON.stringify(error.response.data)}`);
       } else {
