@@ -60,9 +60,8 @@ const App: React.FC = () => {
 
       alert(`File uploaded successfully: ${JSON.stringify(response.data)}`);
 
+      
       const currentDate = new Date();
-
-
 
       const newElement:Item = { name: uploadedFile.name, type: 'file', date: currentDate.toDateString(), location: "In My Drive" }
 
@@ -95,7 +94,7 @@ const App: React.FC = () => {
 
       alert(`File retrieved successfully: ${JSON.stringify(response.data)}`);
 
-      console.log(`File retrieved successfully: ${JSON.stringify(response.data)}`);
+      console.log(`File retrieved successfully: ${response.data}`);
       
       const currentDate = new Date();
 
@@ -247,11 +246,15 @@ const App: React.FC = () => {
             {showInput && (
               <input 
                 type="text"
+                value={text}
                 id="transaction-id-input"
-                onChange={(e) =>  setText(e.target.value)} 
+                onChange={(e) =>  {
+                  setText(e.target.value);
+                }} 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleFileRetrieval(text);
+                    setText('');
                     setShowInput(false);
                   }
                 }}
