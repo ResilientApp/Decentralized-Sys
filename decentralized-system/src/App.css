@@ -71,6 +71,34 @@
   overflow-y: auto;
 }
 
+.owner-name-change-container{
+  margin-top: 10px;
+}
+
+#name-change-input{
+  font-size: 1.0rem;
+  margin: auto;
+}
+
+.name-change-button {
+  background-color: #dfdfdf;
+  color: #1f1f1f;
+  padding: 5px 5px;
+  border: 2px ridge rgba(30, 30, 30, 0.8);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name-change-button:hover {
+  background-color: #d4d4d4;
+}
+
+
 .controls {
   display: flex;
   align-items: center;
@@ -106,6 +134,7 @@
   border-collapse: collapse;
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 60px;
 }
 
 .file-table thead {

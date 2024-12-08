@@ -2,30 +2,36 @@ import axios from 'axios';
 import React, { ChangeEvent, useState } from 'react';
 import './App.css';
 import { ResilientDB } from 'resilientdb-javascript-sdk';
+import * as path from 'path';
+import * as fs from 'fs';
 
 // Generate public and private keys
 const { publicKey, privateKey } = ResilientDB.generateKeys();
+
 
 console.log(`Public Key: ${publicKey}`);
 console.log(`Private Key: ${privateKey}`);
 
 interface Item {
   name: string;
-  type: 'folder' | 'file';
+  type: string;
   date: string;
-  location: string;
+  owner: string;
+  transacID: string;
+  publicKey: string;
 }
 
 
 const App: React.FC = () => {
+  const [ownerName, setOwnerName] = useState("Unnamed Owner");
   const [items, setItems] = useState<Item[]>([
-    { name: "Colab Notebooks", type: "folder", date: "2024-11-15", location: "In My Drive" },
-    { name: "Document.pdf", type: "file", date: "2024-11-13", location: "In My Drive" },
-    { name: "Presentation.pptx", type: "file", date: "2024-11-12", location: "In My Drive" },
-    { name: "Photos", type: "folder", date: "2024-11-14", location: "In My Drive" },
-    { name: "Video.mp4", type: "file", date: "2024-11-11", location: "In My Drive" },
-    { name: "ECS 189F notes.txt", type: "file", date: "2024-11-10", location: "In My Drive" },
-    { name: "Music.mp3", type: "file", date: "2024-11-09", location: "In My Drive" },
+    { name: "Colab Notebooks", type: "folder", date: "2024-11-15", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "Document.pdf", type: "file", date: "2024-11-13", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "Presentation.pptx", type: "file", date: "2024-11-12", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "Photos", type: "folder", date: "2024-11-14", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "Video.mp4", type: "file", date: "2024-11-11", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "ECS 189F notes.txt", type: "file", date: "2024-11-10", owner: "Test", transacID: "1", publicKey: publicKey },
+    { name: "Music.mp3", type: "file", date: "2024-11-09", owner: "Test", transacID: "1", publicKey: publicKey },
   ]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("default");
@@ -38,9 +44,11 @@ const App: React.FC = () => {
   
     if (!uploadedFile) return;
   
+
+
     const formData = new FormData();
     formData.append('file', uploadedFile);
-    formData.append('owner_name', 'Test Owner');  // Dummy
+    formData.append('owner_name', ownerName);
     formData.append('owner_public_key', publicKey);
     formData.append('owner_private_key', privateKey);
   
@@ -58,12 +66,25 @@ const App: React.FC = () => {
       );
 
 
-      alert(`File uploaded successfully: ${JSON.stringify(response.data)}`);
+      alert('File uploaded successfully.');
+      console.log(`File Upload Response: ${JSON.stringify(response.data)}`);
 
       
       const currentDate = new Date();
 
-      const newElement:Item = { name: uploadedFile.name, type: 'file', date: currentDate.toDateString(), location: "In My Drive" }
+      //type: uploadedFile.type
+
+      const responseMsg = response.data.message
+      // We'll parse out the transaction ID from the API response message
+      const noEdgeSpaces = responseMsg.trim();
+
+      const messageWords = noEdgeSpaces.split(' ');
+
+      const transactionID = messageWords.pop(); 
+
+      console.log(transactionID);
+
+      const newElement:Item = { name: uploadedFile.name, type: uploadedFile.type, date: currentDate.toDateString(), owner: ownerName, transacID: transactionID, publicKey: publicKey }
 
       setItems([...items, newElement]);
 
@@ -96,21 +117,48 @@ const App: React.FC = () => {
 
       console.log(`File retrieved successfully: ${response.data}`);
       
-      const currentDate = new Date();
+      //const currentDate = new Date();
 
 
-      const nameExample = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
+      const transac = await axios.get(`https://crow.resilientdb.com/v1/transactions/${givenTransactionID}`);
+      console.log(transac);
+      console.log(transac.data);
+      console.log(transac.data.asset);
+      //const nameExample = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
 
       //console.log(response.data.media_type)
 
-      const newElement:Item = { name: nameExample, type: 'file', date: currentDate.toDateString(), location: "In My Drive" }
+      //const transac = await resilientDBClient.getTransaction(givenTransactionID);
+
+      //console.log(transac)
+
+      //const transac = transacs[1]
+
+
+      const retrievedMetadata = transac.data.asset;
+
+      const transacPublicKey = retrievedMetadata.owner_key;
+      //const transacPublicKey = "0";
+      
+      const fileName = retrievedMetadata.data.file_info.file_name;
+      //const fileName = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
+
+      const ownerName = retrievedMetadata.data.file_info.owner_name;
+      //const ownerName = "Unnamed Owner";
+
+      const fileType = retrievedMetadata.data.file_info.file_type;
+      //const fileType = "file";
+
+      const lastMod = retrievedMetadata.data.file_info.modification_time;
+
+      const newElement:Item = { name: fileName, type: fileType, date: lastMod, owner: ownerName, transacID: givenTransactionID, publicKey: transacPublicKey }
 
       setItems([...items, newElement]);
 
     } catch (error: any) {
       console.error('Error retrieving file:', error);
       if (error.response) {
-        alert(`Error: ${JSON.stringify(error.response.data)}`);
+        alert('Please Enter a Valid Transaction ID');
       } else {
         alert(`Error: ${error.message}`);
       }
@@ -154,6 +202,9 @@ const App: React.FC = () => {
 
   const filteredItems = filterAndSortItems();
 
+  const [showInputOwnerName, setShowInputOwnerName] = useState(false);
+  const [tempOwnerName, setTempOwnerName] = useState('');
+
   const [showInput, setShowInput] = useState(false);
   const [text, setText] = useState('');
   
@@ -161,7 +212,30 @@ const App: React.FC = () => {
     
     <div className="App">
       <header className="app-header">
-        <h1>My Drive</h1>
+        <h1>{ownerName}'s Drive</h1>
+        <div className="owner-name-change-container">
+            {showInputOwnerName && (
+              <input 
+                type="text"
+                value={tempOwnerName}
+                id="name-change-input"
+                onChange={(e) =>  {
+                  setTempOwnerName((e.target.value).replace(/[^a-z A-Z]/g, ''));
+                  // Using a regular expression here that makes sure only letters are inputted into the text box (names only need to contain letters)
+                }} 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tempOwnerName.trim() !== '') {
+                    setOwnerName(tempOwnerName);
+                    setShowInputOwnerName(false);
+                  }
+                }}
+                placeholder= "Press Enter to Submit"
+              />
+            )}
+            {!showInputOwnerName && (
+            <button className="name-change-button" onClick={() => setShowInputOwnerName(!showInput)}>Change Name</button>
+            )}
+          </div>
       </header>
       <div className="app-container">
         {/* Sidebar */}
@@ -214,18 +288,18 @@ const App: React.FC = () => {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Type</th>
-                  <th>Date Modified</th>
-                  <th>Location</th>
+                  <th>File Type</th>
+                  <th>Date Uploaded</th>
+                  <th>Owner</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
                   <tr key={index}>
-                    <td>{item.type === "folder" ? "📁" : "📄"} {item.name}</td>
+                    <td>{"📄"} {item.name}</td>
                     <td>{item.type}</td>
                     <td>{item.date}</td>
-                    <td>{item.location}</td>
+                    <td>{item.owner}</td>
                   </tr>
                 ))}
               </tbody>
@@ -249,10 +323,11 @@ const App: React.FC = () => {
                 value={text}
                 id="transaction-id-input"
                 onChange={(e) =>  {
-                  setText(e.target.value);
+                  setText((e.target.value).replace(/[^a-zA-Z0-9]/g, ''));
+                  // Using a regular expression here that makes sure only letters or numbers are inputted into the text box
                 }} 
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && text !== '') {
                     handleFileRetrieval(text);
                     setText('');
                     setShowInput(false);
