@@ -8,8 +8,6 @@ import { ResilientDB } from 'resilientdb-javascript-sdk';
 const { publicKey: currentPublicKey, privateKey } = ResilientDB.generateKeys();
 
 
-console.log(`Public Key: ${currentPublicKey}`);
-console.log(`Private Key: ${privateKey}`);
 
 interface Item {
   name: string;
@@ -102,7 +100,6 @@ const App: React.FC = () => {
 
       const transactionID = messageWords.pop(); 
 
-      console.log(transactionID);
     
 
         
@@ -426,9 +423,6 @@ const App: React.FC = () => {
         <aside className="sidebar">
           <ul className="sidebar-menu">
             <li className="menu-item active">My Drive</li>
-            <li className="menu-item">Shared with Me</li>
-            <li className="menu-item">Recent</li>
-            <li className="menu-item">Trash</li>
           </ul>
         </aside>
 
