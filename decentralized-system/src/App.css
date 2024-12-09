@@ -23,6 +23,105 @@
   color: #333;
 }
 
+.owner-name-change-container{
+  margin-top: 10px;
+}
+
+#name-change-input{
+  font-size: 1.0rem;
+  margin: auto;
+}
+
+.name-change-button {
+  background-color: #dfdfdf;
+  color: #1c1c1c;
+  padding: 5px 5px;
+  border: 2px ridge rgba(119, 119, 119, 0.8);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name-change-button:hover {
+  background-color: #d4d4d4;
+}
+
+
+
+.export-save-button-container {
+  position: fixed;
+  top: 20px;
+  right: 55vw;
+  z-index: 2;
+}
+
+.export-button {
+  background-color: rgb(160, 136, 0);
+  color: #ffffff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.0rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.export-button:hover {
+  background-color: rgb(115, 98, 3);;
+}
+
+
+.import-save-button-container {
+  position: fixed;
+  top: 20px;
+  right: 45vw;
+  z-index: 2;
+}
+
+.import-button {
+  background-color: #009c15;
+  color: #ffffff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.0rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.import-button:hover {
+  background-color: #006e0f;
+}
+
+
+.public-key-container{
+  float: right;
+  justify-self: right;
+  margin-right: 2vw;
+  margin-top: -30px;
+  margin-left: 50vw;
+  justify-content: right;
+}
+
+.public-key-label{
+  font-size: 1.0rem;
+  text-align: right;
+  justify-self: right;
+  font-weight: bold;
+
+}
 
 
 /*=============== SIDEBAR ================*/
@@ -69,33 +168,6 @@
   flex: 1;
   padding: 20px 30px;
   overflow-y: auto;
-}
-
-.owner-name-change-container{
-  margin-top: 10px;
-}
-
-#name-change-input{
-  font-size: 1.0rem;
-  margin: auto;
-}
-
-.name-change-button {
-  background-color: #dfdfdf;
-  color: #1f1f1f;
-  padding: 5px 5px;
-  border: 2px ridge rgba(30, 30, 30, 0.8);
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.name-change-button:hover {
-  background-color: #d4d4d4;
 }
 
 
@@ -148,6 +220,11 @@
   font-size: 1rem;
 }
 
+.file-table td {
+  overflow: auto;
+  max-width: 20vw;
+}
+
 .file-table th {
   font-weight: bold;
 }
@@ -156,7 +233,7 @@
   background: #f9f9f9;
 }
 
-/*=============== UPLOAD/RETRIEVE BUTTONS ================*/
+/*=============== UPLOAD/RETRIEVE/DOWNLOAD BUTTONS ================*/
 
 
 .upload-button-container {
@@ -219,6 +296,27 @@
   text-align:center;
 }
 
+
+
+.download-button {
+  background-color: #1b2483;
+  color: #ffffff;
+  padding: 8px 8px;
+  border: outset 2px #111758;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 5px;
+  justify-self: center;
+}
+
+.download-button:hover {
+  background-color: #273096;
+}
 
 
 

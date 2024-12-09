@@ -2,36 +2,57 @@ import axios from 'axios';
 import React, { ChangeEvent, useState } from 'react';
 import './App.css';
 import { ResilientDB } from 'resilientdb-javascript-sdk';
-import * as path from 'path';
-import * as fs from 'fs';
+
 
 // Generate public and private keys
-const { publicKey, privateKey } = ResilientDB.generateKeys();
+const { publicKey: currentPublicKey, privateKey } = ResilientDB.generateKeys();
 
 
-console.log(`Public Key: ${publicKey}`);
+console.log(`Public Key: ${currentPublicKey}`);
 console.log(`Private Key: ${privateKey}`);
 
 interface Item {
   name: string;
+  typeBroad: string;
   type: string;
   date: string;
   owner: string;
   transacID: string;
   publicKey: string;
+  isRetrieved: boolean;
+  transacPrivateKey: string | null;
+  fileData: Blob;
+  //True means retrieved, false means uploaded
 }
+
+//Common filetype extensions and their conversion to MIME
+const extensionToMimeType: Record<string, string> = {
+  "js": "application/javascript",
+  "json": "application/json",
+  "pdf": "application/pdf",
+  "doc": "application/msword",
+  "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "xls": "application/vnd.ms-excel",
+  "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "zip": "application/zip",
+  "png": "image/png",
+  "jpg": "image/jpeg",
+  "jpeg": "image/jpeg",
+  "gif": "image/gif",
+  "webp": "image/webp",
+  "mp3": "audio/mpeg",
+  "mp4": "video/mp4",
+  "avi": "video/x-msvideo",
+  "txt": "text/plain",
+  "html": "text/html",
+  "css": "text/css",
+};
 
 
 const App: React.FC = () => {
   const [ownerName, setOwnerName] = useState("Unnamed Owner");
   const [items, setItems] = useState<Item[]>([
-    { name: "Colab Notebooks", type: "folder", date: "2024-11-15", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "Document.pdf", type: "file", date: "2024-11-13", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "Presentation.pptx", type: "file", date: "2024-11-12", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "Photos", type: "folder", date: "2024-11-14", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "Video.mp4", type: "file", date: "2024-11-11", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "ECS 189F notes.txt", type: "file", date: "2024-11-10", owner: "Test", transacID: "1", publicKey: publicKey },
-    { name: "Music.mp3", type: "file", date: "2024-11-09", owner: "Test", transacID: "1", publicKey: publicKey },
+
   ]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortType, setSortType] = useState<string>("default");
@@ -49,7 +70,7 @@ const App: React.FC = () => {
     const formData = new FormData();
     formData.append('file', uploadedFile);
     formData.append('owner_name', ownerName);
-    formData.append('owner_public_key', publicKey);
+    formData.append('owner_public_key', currentPublicKey);
     formData.append('owner_private_key', privateKey);
   
     try {
@@ -66,13 +87,12 @@ const App: React.FC = () => {
       );
 
 
-      alert('File uploaded successfully.');
+      alert('File Uploaded Successfully.');
       console.log(`File Upload Response: ${JSON.stringify(response.data)}`);
 
       
-      const currentDate = new Date();
+      const lastModifiedDate = new Date(uploadedFile.lastModified);
 
-      //type: uploadedFile.type
 
       const responseMsg = response.data.message
       // We'll parse out the transaction ID from the API response message
@@ -83,8 +103,12 @@ const App: React.FC = () => {
       const transactionID = messageWords.pop(); 
 
       console.log(transactionID);
+    
 
-      const newElement:Item = { name: uploadedFile.name, type: uploadedFile.type, date: currentDate.toDateString(), owner: ownerName, transacID: transactionID, publicKey: publicKey }
+        
+
+
+      const newElement:Item = { name: uploadedFile.name, typeBroad: uploadedFile.type.split('/')[0], type: uploadedFile.type.split('/')[1], date: lastModifiedDate.toString(), owner: ownerName, transacID: transactionID, publicKey: currentPublicKey,  isRetrieved: false, transacPrivateKey: privateKey, fileData: new Blob()}
 
       setItems([...items, newElement]);
 
@@ -102,69 +126,212 @@ const App: React.FC = () => {
   const handleFileRetrieval = async (inp: string) => {
     const givenTransactionID = inp;
   
+    // Do not execute retrieval if an empty string is inputted
     if (!givenTransactionID) return;
+
+    // Do not execute retrieval if an identical retrieval with the same transaction ID was done before in this session/save
+    // Also, store for later whether there is an identical uploaded file from this session or save and replace that with a retrieval version to allow downloads
+    let uploadedVersionIndex = -1;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].transacID === givenTransactionID) {
+        if(items[i].isRetrieved === true){
+          alert('This File Has Already Been Retrieved to Your Drive, Please Enter a Different Transaction ID');
+          return;
+        }else{
+          uploadedVersionIndex = i;
+          break;
+        }
+      }
+    }
   
   
     try {
       console.log('Attempting to retrieve file with Transaction ID:', givenTransactionID);
 
       const response = await axios.post(
-        `https://resilientfilesapi.onrender.com/retrieve_file/?tx_id=${givenTransactionID}`
-      );
+        `https://resilientfilesapi.onrender.com/retrieve_file/?tx_id=${givenTransactionID}`, {
+      responseType: 'blob'});
 
 
-      alert(`File retrieved successfully: ${JSON.stringify(response.data)}`);
+      if(uploadedVersionIndex === -1){
+        alert('New File Retrieved Successfully.');
+      }else{
+        alert('Previously Uploaded File Retrieved Successfully.');
+      }
 
-      console.log(`File retrieved successfully: ${response.data}`);
+      console.log(`File retrieved successfully: ${JSON.stringify(response.data)}`);
       
-      //const currentDate = new Date();
 
 
-      const transac = await axios.get(`https://crow.resilientdb.com/v1/transactions/${givenTransactionID}`);
-      console.log(transac);
-      console.log(transac.data);
-      console.log(transac.data.asset);
-      //const nameExample = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
-
-      //console.log(response.data.media_type)
-
-      //const transac = await resilientDBClient.getTransaction(givenTransactionID);
-
-      //console.log(transac)
-
-      //const transac = transacs[1]
+      if(uploadedVersionIndex === -1){
+        const transac = await axios.get(`https://crow.resilientdb.com/v1/transactions/${givenTransactionID}`);
 
 
-      const retrievedMetadata = transac.data.asset;
+        const retrievedMetadata = transac.data.asset;
 
-      const transacPublicKey = retrievedMetadata.owner_key;
-      //const transacPublicKey = "0";
+        const transacPublicKey = retrievedMetadata.data.file_info.owner_key;
+
       
-      const fileName = retrievedMetadata.data.file_info.file_name;
-      //const fileName = "Retrieved File " + givenTransactionID[0] + givenTransactionID[1];
+        const fileName = retrievedMetadata.data.file_info.file_name;
 
-      const ownerName = retrievedMetadata.data.file_info.owner_name;
-      //const ownerName = "Unnamed Owner";
+        const ownerName = retrievedMetadata.data.file_info.owner_name;
 
-      const fileType = retrievedMetadata.data.file_info.file_type;
-      //const fileType = "file";
+        const fileType = retrievedMetadata.data.file_info.file_type;
 
-      const lastMod = retrievedMetadata.data.file_info.modification_time;
+        const lastMod = retrievedMetadata.data.file_info.modification_time;
 
-      const newElement:Item = { name: fileName, type: fileType, date: lastMod, owner: ownerName, transacID: givenTransactionID, publicKey: transacPublicKey }
+        const fileTypeFull = (extensionToMimeType[fileType]) ? extensionToMimeType[fileType] : `file/${fileType}`;
 
-      setItems([...items, newElement]);
+        const blobFileData = new Blob([response.data], { type: fileTypeFull });
+
+        
+        const newElement:Item = { name: fileName, typeBroad: fileTypeFull.split('/')[0], type: fileTypeFull.split('/')[1], date: lastMod, owner: ownerName, transacID: givenTransactionID, publicKey: transacPublicKey, isRetrieved: true, transacPrivateKey: null, fileData: blobFileData }
+
+        setItems([...items, newElement]);
+
+      }else{
+
+        const blobFileData = new Blob([response.data], { type: (items[uploadedVersionIndex].typeBroad + "/" + items[uploadedVersionIndex].type) });
+
+        items[uploadedVersionIndex].fileData = blobFileData;
+        items[uploadedVersionIndex].isRetrieved = true;
+        //Refresh the HTML of the page by calling setItems but not changing the items array
+        setItems([...items]);
+      }
 
     } catch (error: any) {
       console.error('Error retrieving file:', error);
       if (error.response) {
-        alert('Please Enter a Valid Transaction ID');
+        alert('Error retrieving file. Please Enter a Valid Transaction ID.');
       } else {
         alert(`Error: ${error.message}`);
       }
     }
   };
 
+  const downloadFile = async (blob: Blob, fileName: string) => {
+    try {
+      
+
+      const url = URL.createObjectURL(blob);
+  
+      const temp = document.createElement("a");
+      temp.href = url;
+      temp.download = fileName;
+  
+      document.body.appendChild(temp);
+
+      temp.click();
+  
+      document.body.removeChild(temp);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Failed to download the file:", error);
+      alert('Failed to Download the File.')
+    }
+  };
+
+  
+  const downloadSaveFile = () => {
+    try {
+      const currentTime = (new Date()).toString();
+      const wrapper = {
+        currentTime,
+        ownerName, 
+        items: items.map((item) => ({
+          ...item,
+          isRetrieved: false,
+          transacPrivateKey: item.transacPrivateKey,
+          fileData: null, 
+        })),
+      };
+
+      const jsonString = JSON.stringify(wrapper, null, 2);
+
+      const blob = new Blob([jsonString], { type: 'text/plain' });
+
+      const url = URL.createObjectURL(blob);
+  
+      const temp = document.createElement("a");
+      temp.href = url;
+      
+      const tempDate = new Date();
+      temp.download = "DriveSave" + tempDate.toDateString().replace(/\s/g, "") + ".txt";
+  
+      document.body.appendChild(temp);
+
+      temp.click();
+  
+      document.body.removeChild(temp);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download the save file:", error);
+      alert('Failed to Download the Save File.')
+    }
+  };
+
+  const loadSaveFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = e.target.files?.[0];
+  
+    if (!uploadedFile || uploadedFile.type !== "text/plain"){
+      alert('Please Upload a Valid Save File That Was Previously Generated Here.');
+      return;
+    }
+
+    let tempArr:Item[] = [];
+
+    let tempName = "Unnamed Owner";
+
+
+    try {
+      let jsonObject;
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+          
+        const jsonString = e.target?.result as string;
+        const parsedJson = JSON.parse(jsonString);
+        jsonObject = parsedJson;
+
+        if (!jsonObject || typeof jsonObject !== 'object') {
+          alert('Please Upload a Valid Save File That Was Previously Generated Here and Unmodified.');
+        }
+
+        if((new Date(uploadedFile.lastModified)).toString() !== jsonObject['currentTime']){
+          alert("Please Enter An Unmodified Save File.");
+          return;
+        }
+  
+        tempName = jsonObject['ownerName'];
+  
+        tempArr = jsonObject['items'];
+  
+        console.log(jsonObject['items']);
+  
+        for (let i = 0; i < tempArr.length; i++) {
+          tempArr[i].fileData = new Blob();
+        }
+  
+        setOwnerName(tempName);
+  
+        setItems(tempArr);
+
+      };
+
+      reader.readAsText(uploadedFile);
+
+
+
+      
+
+    } catch (error) {
+      console.error("Failed to load the file:", error);
+      alert('Failed to Load the Save File. Please Upload A Previously Generated Unmodified Save File.')
+    }
+
+  }
 
   // Sorting
 
@@ -193,7 +360,7 @@ const App: React.FC = () => {
 
     if (fileTypeFilter) {
       filteredItems = filteredItems.filter(
-        (item) => item.type === "file" && item.name.endsWith(fileTypeFilter)
+        (item) => item.type.endsWith(fileTypeFilter)
       );
     }
 
@@ -236,6 +403,23 @@ const App: React.FC = () => {
             <button className="name-change-button" onClick={() => setShowInputOwnerName(!showInput)}>Change Name</button>
             )}
           </div>
+          <div className="export-save-button-container">
+            <button className="export-button" onClick={() => downloadSaveFile()}>Export Save</button>
+          </div>
+          <div className="import-save-button-container">
+            <input
+              type="file"
+              id="import-upload"
+              onChange={loadSaveFile}
+              hidden
+            />
+            <label htmlFor="import-upload" className="import-button">
+              Import Save
+            </label>
+          </div>
+          <div className="public-key-container">
+            <label className="public-key-label">Current Public Key: {currentPublicKey}</label>
+          </div>
       </header>
       <div className="app-container">
         {/* Sidebar */}
@@ -265,8 +449,6 @@ const App: React.FC = () => {
               onChange={(e) => setSortType(e.target.value)}
             >
               <option value="default">Default</option>
-              <option value="folders">Folders</option>
-              <option value="files">Files</option>
               <option value="recent">Recent</option>
             </select>
             <label htmlFor="fileType">File type:</label>
@@ -276,11 +458,14 @@ const App: React.FC = () => {
               onChange={(e) => setFileTypeFilter(e.target.value)}
             >
               <option value="">All</option>
-              <option value=".pdf">.pdf</option>
-              <option value=".txt">.txt</option>
-              <option value=".mp4">.mp4</option>
-              <option value=".mp3">.mp3</option>
-              <option value=".pptx">.pptx</option>
+              <option value="pdf">.pdf</option>
+              <option value="txt">.txt</option>
+              <option value="rtf">.rtf</option>
+              <option value="png">.png</option>
+              <option value="jpg">.jpg</option>
+              <option value="mp4">.mp4</option>
+              <option value="mpeg">.mp3</option>
+              <option value="pptx">.pptx</option>
             </select>
           </div>
           <div className="items">
@@ -291,15 +476,40 @@ const App: React.FC = () => {
                   <th>File Type</th>
                   <th>Date Uploaded</th>
                   <th>Owner</th>
+                  <th>Transaction ID</th>
+                  <th>Public Owner Key</th>
+                  <th>Retrieved or Uploaded</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
                   <tr key={index}>
-                    <td>{"📄"} {item.name}</td>
+                    {(item.typeBroad === 'file' || item.typeBroad === 'application' || item.typeBroad === 'example' || item.typeBroad === 'haptics' || item.typeBroad === 'message' || item.typeBroad === 'multipart') &&
+                      <td>📄 {item.name}</td>}
+                    {(item.typeBroad === 'audio') &&
+                      <td>🔊 {item.name}</td>}
+                    {(item.typeBroad === 'image') &&
+                      <td>📷 {item.name}</td>}
+                    {(item.typeBroad === 'video') &&
+                      <td>🎥 {item.name}</td>}
+                    {(item.typeBroad === 'text') &&
+                      <td>📝 {item.name}</td>}
+                    {(item.typeBroad === 'font') &&
+                      <td>🔡 {item.name}</td>}
                     <td>{item.type}</td>
                     <td>{item.date}</td>
-                    <td>{item.owner}</td>
+                    <td>
+                      {item.owner}
+                      {item.transacPrivateKey &&
+                      <label><br></br>(You Own This File)</label>}
+                    </td>
+                    <td>{item.transacID}</td>
+                    <td>{item.publicKey}</td>
+                    <td>
+                      {item.isRetrieved ? "Retrieved" : "Uploaded" } 
+                      {item.isRetrieved &&
+                      <button className="download-button" onClick={() => downloadFile(item.fileData, item.name)}>Download</button>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
