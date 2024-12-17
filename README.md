@@ -2,11 +2,13 @@
 
 ## Used technologies
 - React.js
+- Typescript
 - CSS
 
 ## How to run
 1. cd decentralized-system
-2. npm run
+2. npm install
+3. npm run dev
 
 ## Collaborators
 <a href="https://github.com/minjiyun02">
@@ -20,8 +22,4 @@
 <a href="https://github.com/nkotni">
   <img src="https://github.com/nkotni.png" alt="Nathan" width="60px;"/>
   <p>Nathan Kotni</p>
-</a>
-<a href="https://github.com/fluffy-llama7">
-  <img src="https://github.com/fluffy-llama7.png" alt="Trina Sagar" width="60px;"/>
-  <p>Trina Sagar</p>
 </a>
